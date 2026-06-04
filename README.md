@@ -1,44 +1,31 @@
-# Soul Arcade II — GitHub Pages deploy
+# Soul Arcade II
 
-Upload these **6 files** to your `soul-arcade-2` repo so they sit at the **root of the served folder** (the one that becomes `https://denislunev.github.io/soul-arcade-2/`):
+An arcade-style name vibe reader — the standalone sequel. Type a name and get its vibe verdict, battle two names head-to-head, or guess the hidden daily name. Pure math, no mysticism, no personal data.
 
-```
-index.html      <- the game (GitHub Pages serves index.html automatically)
-manifest.json   <- PWA manifest (name, icons, standalone)
-sw.js           <- service worker (network-first: fresh when online, offline from cache)
-icon-192.png    <- app icon
-icon-512.png    <- app icon
-privacy.html    <- privacy policy (link from social/store if needed)
-```
+## How it works
 
-## Steps (repo `soul-arcade-2`, served at `/soul-arcade-2/`)
+- Type any English letters and get one of 101 fun verdicts
+- The app maps the input deterministically — same input always gives the same verdict
+- Three modes: **SOLO** (vibe verdicts), **VS** (rock-paper-scissors duels), **GUESS** (daily Wordle-style name)
+- Collect stickers, build daily streaks, and unlock visual effects
+- No phone numbers, no AI, no tracking
 
-1. Open your `soul-arcade-2` GitHub repo.
-2. Upload all 6 files into the repo root (replace any existing index.html / manifest.json).
-3. Commit.
-4. In the repo: **Settings -> Pages** -> set source to your main branch (root), save. Wait ~1 minute.
-5. Open `https://denislunev.github.io/soul-arcade-2/` on your phone - it should load, and Chrome should offer **Add to Home screen** (installable PWA).
+## Tech stack
 
-## Verify the player counter
+- Single-file HTML + CSS + vanilla JavaScript
+- Installable PWA (manifest + service worker, works offline)
+- LocalStorage for personal progress (never uploaded)
+- Anonymous player counter via a Cloudflare Worker (stores only numbers)
+- Privacy-safe viral loop via one-way hash in shared URLs
 
-1. Open the game once (this sends the daily ping).
-2. Open `https://soul-arcade-2-stats.denis33a1.workers.dev/stats` -> should show `players_today: 1, total_players: 1`.
-3. In the game: tap **STATS** -> bottom shows **WORLDWIDE** with the same numbers.
+## Live demo
 
-## Updating later (avoids stale versions)
+Play here: https://denislunev.github.io/soul-arcade-2/
 
-The service worker is **network-first**, so online users always get the freshest `index.html`. For a clean cache flush on a new release, bump the version string in `sw.js`:
+## Privacy
 
-```
-const CACHE = 'soul-arcade-2-v9_18';   ->   'soul-arcade-2-v9_19';
-```
+See [privacy.html](privacy.html) — the app collects no personal data. Only an anonymous player count (numbers only) is kept.
 
-Old caches self-delete on next visit.
+## License
 
-## Notes
-
-- `start_url` and `scope` are `.` (relative), so it works under the `/soul-arcade-2/` subpath without edits.
-- The stats Worker is cross-origin and is **not** cached by the service worker - counts stay live.
-- The game's share link points to `https://denislunev.github.io/soul-arcade-2` (already set in index.html).
-- Your first game stays separate; this is the standalone "II" build everywhere.
-- Privacy policy is at `https://denislunev.github.io/soul-arcade-2/privacy.html`.
+Copyright (c) 2026 Denis Lunev. All rights reserved.

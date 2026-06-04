@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Soul Arcade II v9.18
+  Soul Arcade II v9.18.1
   Arcade name vibe reader · 101 verdicts · pure math, no mysticism
   Features: random visual effects (satoshi/rainbow/glitch/glow) · VS rock-paper-scissors ·
             Daily Mystery Name (length shown, per-letter clues, 6-tier win) · Daily stats · Stickers
@@ -182,7 +182,7 @@ body.is-daily-mode .daily-display-panel { display: flex; flex-direction: column;
 .vs-card-emoji { font-size: 26px; display: block; margin-bottom: 6px; line-height: 1; }
 /* Trash-talk is the hero: semi-bold, softer off-white. Font-size is set dynamically in JS per text length. */
 .vs-card-verdict { font-size: 17px; font-weight: 600; line-height: 1.4; color: #d8dde2; letter-spacing: 0.3px; word-break: break-word; }
-.vs-card-rarity { font-size: 8px; color: #777; margin-top: 6px; letter-spacing: 1px; }
+.vs-card-rarity { font-size: 10px; color: #a96cff; margin-top: 6px; letter-spacing: 1px; font-weight: 600; }
 /* No more vs-compare-label — divider lives on .vs-dynamic via border-top. */
 .vs-dynamic { border-top: 1px solid #ffd700; margin-top: 6px; padding-top: 8px; font-size: 11px; color: #ffd700; text-align: center; line-height: 1.3; letter-spacing: 0.5px; }
 
@@ -371,7 +371,7 @@ body.is-result .result-actions { display: flex; }
 .sticker-toast-label { font-size: 10px; color: var(--yellow); letter-spacing: 2px; }
 .sticker-toast-name { font-size: 14px; color: white; letter-spacing: 1px; }
 
-.watermark { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 9px; color: #5a4080; letter-spacing: 3px; pointer-events: none; z-index: 5; }
+.watermark { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 10px; color: #a96cff; letter-spacing: 3px; pointer-events: none; z-index: 5; }
 .counter { position: absolute; top: 8px; left: 12px; font-size: 9px; color: #444; letter-spacing: 2px; z-index: 5; }
 
 @keyframes pulse-border { 0%, 100% { border-color: var(--yellow); } 50% { border-color: var(--blue); } }
