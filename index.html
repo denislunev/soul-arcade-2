@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Soul Arcade II v9.18.2
+  Soul Arcade II v9.18.4
   Arcade name vibe reader · 101 verdicts · pure math, no mysticism
   Features: random visual effects (satoshi/rainbow/glitch/glow) · VS rock-paper-scissors ·
             Daily Mystery Name (length shown, per-letter clues, 6-tier win) · Daily stats · Stickers
@@ -205,6 +205,7 @@ body.is-daily-mode .daily-display-panel { display: flex; flex-direction: column;
 .daily-row-verdict { flex: 1; min-width: 90px; font-size: 10px; text-align: right; color: #aaa; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
 .daily-row-verdict-emoji { font-size: 14px; }
 .daily-remaining { font-size: 10px; color: #9aa3b2; text-align: center; margin-top: 4px; }
+.daily-hint { font-size: 11px; color: #ff5a5a; text-align: center; min-height: 14px; margin-top: 4px; opacity: 0; transition: opacity 0.2s; letter-spacing: 1px; font-weight: 600; }
 .daily-end-screen { text-align: center; padding: 12px; border-top: 1px solid var(--yellow); margin-top: 8px; }
 .daily-end-answer { font-size: 28px; color: var(--yellow); margin: 8px 0; }
 .daily-end-streak { font-size: 14px; color: #ff6600; margin: 8px 0; }
@@ -455,6 +456,7 @@ body.is-result .result-actions { display: flex; }
         <!-- Daily Panel -->
         <div class="display-panel daily-display-panel">
             <div class="daily-status" id="dailyStatus"></div>
+            <div class="daily-hint" id="dailyHint"></div>
             <div class="daily-attempts" id="dailyAttemptsList"></div>
             <div class="daily-remaining" id="dailyRemaining"></div>
             <div id="dailyEndScreen" style="display:none;"></div>
@@ -491,11 +493,11 @@ body.is-result .result-actions { display: flex; }
             <p class="rules-mode">⚔️ VS</p>
             <p>Enter two names. They battle with rock-paper-scissors — <b>rock</b> beats scissors, <b>scissors</b> beat paper, <b>paper</b> beats rock. Same gesture = a tie.</p>
             <p class="rules-mode">🔤 GUESS</p>
-            <p>Guess today's hidden name in <b>6 tries</b>. The letter count is shown up front. After each guess every letter is colored:</p>
+            <p>Guess today's hidden name in <b>6 tries</b>. The letter count is shown up front, and each guess must be a <b>real name of that exact length</b> (random letters won't be accepted — only genuine names count, like word games). After each guess every letter is colored:</p>
             <div class="rules-row"><span class="daily-letter is-green">A</span><span>Right letter, right spot</span></div>
             <div class="rules-row"><span class="daily-letter is-yellow">B</span><span>In the name, wrong spot</span></div>
             <div class="rules-row"><span class="daily-letter is-black">C</span><span>Not in the name</span></div>
-            <p>Solve it in 1 or 2 tries for a <b>golden</b> celebration. A new name drops daily — keep your streak alive. 🔥</p>
+            <p>An invalid guess (wrong length or not a known name) doesn't use up a try. Solve it in 1 or 2 tries for a <b>golden</b> celebration. A new name drops daily — keep your streak alive. 🔥</p>
         </div>
     </div>
 </div>
@@ -614,6 +616,91 @@ const DAILY_NAMES = [
     DAILY_NAMES.length = 0;
     DAILY_NAMES.push(...cleaned);
 }
+
+// Accepted-guess dictionary: a guess must be a real name (answers + a larger name list).
+// This stops alphabet brute-force and 20-letter probing while keeping guessing free.
+const GUESS_EXTRA = [
+    'AARON', 'ABEL', 'ABIGAIL', 'ABRAHAM', 'ADA', 'ADAM', 'ADELE', 'ADRIAN', 'AGATHA', 'AGNES', 'AIDEN', 'AILEEN',
+    'ALAN', 'ALBERT', 'ALBERTO', 'ALEX', 'ALEXA', 'ALEXIS', 'ALFRED', 'ALICE', 'ALICIA', 'ALINA', 'ALISON', 'ALLAN',
+    'ALMA', 'ALONZO', 'ALVIN', 'AMANDA', 'AMBER', 'AMELIE', 'AMOS', 'AMY', 'ANA', 'ANDRE', 'ANDREA', 'ANGELA',
+    'ANGELO', 'ANITA', 'ANNA', 'ANNIE', 'ANTHONY', 'ANTONIO', 'APRIL', 'ARCHER', 'ARCHIE', 'ARLENE', 'ARLO', 'ARMANDO',
+    'ARNOLD', 'ARTHUR', 'ASHLEY', 'ASHTON', 'ASTRID', 'AUBREY', 'AUGUST', 'AUSTIN', 'AVERY', 'BAILEY', 'BARBARA', 'BARRY',
+    'BEATRICE', 'BECKY', 'BELINDA', 'BENJAMIN', 'BERNARD', 'BERTHA', 'BETH', 'BETTY', 'BEVERLY', 'BIANCA', 'BILLIE', 'BLAKE',
+    'BLANCHE', 'BOBBY', 'BONNIE', 'BORIS', 'BRADLEY', 'BRANDON', 'BRENDA', 'BRENDAN', 'BRENT', 'BRETT', 'BRIAN', 'BRIANA',
+    'BRIDGET', 'BROOKE', 'BRUCE', 'BRUNO', 'BRYAN', 'BRYCE', 'CALEB', 'CALLIE', 'CALVIN', 'CAMERON', 'CAMILLE', 'CANDICE',
+    'CARA', 'CARL', 'CARLA', 'CARLOS', 'CARMEN', 'CAROL', 'CAROLINE', 'CARRIE', 'CASEY', 'CASSIE', 'CATHERINE', 'CECIL',
+    'CEDRIC', 'CELESTE', 'CESAR', 'CHAD', 'CHARLENE', 'CHARLES', 'CHARLIE', 'CHELSEA', 'CHESTER', 'CHLOE', 'CHRIS', 'CHRISTIAN',
+    'CHRISTINA', 'CINDY', 'CLAIRE', 'CLARA', 'CLARENCE', 'CLARK', 'CLAUDE', 'CLAUDIA', 'CLAYTON', 'CLIFFORD', 'CLINT', 'CLINTON',
+    'CLYDE', 'COLE', 'COLIN', 'COLLEEN', 'CONNOR', 'CONRAD', 'CONSTANCE', 'CORA', 'COREY', 'CORNELIUS', 'COURTNEY', 'CRAIG',
+    'CRYSTAL', 'CURTIS', 'CYNTHIA', 'CYRUS', 'DAISY', 'DALE', 'DALTON', 'DAMON', 'DANA', 'DANIEL', 'DANNY', 'DAPHNE',
+    'DARIUS', 'DARLENE', 'DARREN', 'DARRYL', 'DARWIN', 'DAVE', 'DAVID', 'DAWN', 'DEAN', 'DEBORAH', 'DEBRA', 'DELIA',
+    'DELLA', 'DENNIS', 'DEREK', 'DESMOND', 'DESTINY', 'DEVIN', 'DEVON', 'DIANA', 'DIANE', 'DIEGO', 'DILLON', 'DINA',
+    'DION', 'DIXIE', 'DOLLY', 'DOLORES', 'DOMINIC', 'DONALD', 'DONNA', 'DORA', 'DOREEN', 'DORIS', 'DOROTHY', 'DOUGLAS',
+    'DREW', 'DUANE', 'DUNCAN', 'DUSTIN', 'DWAYNE', 'DWIGHT', 'DYLAN', 'EARL', 'EARNEST', 'EDDIE', 'EDGAR', 'EDITH',
+    'EDMUND', 'EDNA', 'EDUARDO', 'EDWARD', 'EDWIN', 'EILEEN', 'ELAINE', 'ELENA', 'ELI', 'ELIAS', 'ELISE', 'ELIZA',
+    'ELLEN', 'ELLIOT', 'ELLIS', 'ELMER', 'ELOISE', 'ELSIE', 'ELTON', 'ELVIRA', 'EMANUEL', 'EMERSON', 'EMILE', 'EMILY',
+    'EMMETT', 'ENRIQUE', 'ERIC', 'ERICA', 'ERIK', 'ERNEST', 'ERROL', 'ESTHER', 'ETHAN', 'ETHEL', 'EUGENE', 'EUNICE',
+    'EVA', 'EVAN', 'EVELYN', 'EVERETT', 'FABIAN', 'FAITH', 'FANNY', 'FARRELL', 'FAY', 'FELIPE', 'FELIX', 'FERN',
+    'FERNANDO', 'FINLEY', 'FIONA', 'FLETCHER', 'FLORA', 'FLORENCE', 'FLOYD', 'FORREST', 'FRANCES', 'FRANCIS', 'FRANK', 'FRANKIE',
+    'FRANKLIN', 'FRED', 'FREDDIE', 'FREDERICK', 'GABRIEL', 'GAIL', 'GARRETT', 'GARY', 'GAVIN', 'GENE', 'GEOFFREY', 'GEORGE',
+    'GEORGIA', 'GERALD', 'GERARD', 'GIANNA', 'GIDEON', 'GILBERT', 'GINA', 'GLADYS', 'GLEN', 'GLENN', 'GLORIA', 'GORDON',
+    'GRACE', 'GRACIE', 'GRADY', 'GRAHAM', 'GRANT', 'GREGORY', 'GRETCHEN', 'GRIFFIN', 'GUSTAVO', 'GWEN', 'HADLEY', 'HAILEY',
+    'HANNAH', 'HAROLD', 'HARPER', 'HARRIET', 'HARRY', 'HARVEY', 'HATTIE', 'HAYDEN', 'HAZEL', 'HEATHER', 'HECTOR', 'HEIDI',
+    'HELEN', 'HELENA', 'HENRY', 'HERBERT', 'HERMAN', 'HILDA', 'HOLLY', 'HOMER', 'HORACE', 'HOWARD', 'HUBERT', 'HUGH',
+    'HUGO', 'HUNTER', 'IAN', 'IDA', 'IGNACIO', 'IMOGEN', 'INEZ', 'INGRID', 'IRENE', 'IRIS', 'IRMA', 'IRVING',
+    'ISAAC', 'ISABEL', 'ISAIAH', 'ISIDORE', 'IVAN', 'IVY', 'JACK', 'JACKIE', 'JACKSON', 'JACOB', 'JADA', 'JADE',
+    'JAIME', 'JAKE', 'JAMAL', 'JAMES', 'JAMIE', 'JANE', 'JANET', 'JANICE', 'JARED', 'JASMINE', 'JASON', 'JASPER',
+    'JAVIER', 'JAY', 'JAYDEN', 'JEAN', 'JEANETTE', 'JEFF', 'JEFFREY', 'JENNA', 'JENNIFER', 'JENNY', 'JEREMY', 'JEROME',
+    'JERRY', 'JESSE', 'JESSICA', 'JESS', 'JILL', 'JIM', 'JIMMY', 'JOAN', 'JOANNA', 'JOCELYN', 'JODY', 'JOE',
+    'JOEL', 'JOEY', 'JOHN', 'JOHNNY', 'JOLENE', 'JONAH', 'JONAS', 'JONATHAN', 'JORDAN', 'JORGE', 'JOSEPH', 'JOSEPHINE',
+    'JOSH', 'JOSHUA', 'JOSIE', 'JUAN', 'JUDITH', 'JUDY', 'JULES', 'JULIA', 'JULIAN', 'JULIE', 'JULIO', 'JUNE',
+    'JUSTIN', 'KAI', 'KARA', 'KAREN', 'KARL', 'KARLA', 'KATE', 'KATELYN', 'KATHERINE', 'KATHLEEN', 'KATHY', 'KATIE',
+    'KATRINA', 'KAY', 'KAYLA', 'KEITH', 'KELLY', 'KELSEY', 'KEN', 'KENDRA', 'KENNETH', 'KENT', 'KERRY', 'KEVIN',
+    'KIM', 'KIMBERLY', 'KIRK', 'KIRSTEN', 'KLAUS', 'KRISTEN', 'KRISTIN', 'KURT', 'KYLE', 'KYLIE', 'LACEY', 'LANA',
+    'LANCE', 'LARRY', 'LAURA', 'LAUREN', 'LAURIE', 'LAWRENCE', 'LEAH', 'LEE', 'LELAND', 'LENA', 'LENNON', 'LENNY',
+    'LEO', 'LEON', 'LEONARD', 'LEROY', 'LESLIE', 'LESTER', 'LEWIS', 'LIAM', 'LIANA', 'LILA', 'LILLIAN', 'LILY',
+    'LINCOLN', 'LINDA', 'LINDSAY', 'LIONEL', 'LISA', 'LIZA', 'LLOYD', 'LOGAN', 'LOIS', 'LOLA', 'LORENZO', 'LORETTA',
+    'LORI', 'LORNA', 'LOTTIE', 'LOUIS', 'LOUISE', 'LOWELL', 'LUCAS', 'LUCIA', 'LUCILLE', 'LUCY', 'LUIS', 'LUKE',
+    'LULU', 'LUNA', 'LYDIA', 'LYLE', 'LYNN', 'MABEL', 'MACK', 'MADELINE', 'MADISON', 'MAE', 'MAGGIE', 'MALCOLM',
+    'MALIK', 'MAMIE', 'MANUEL', 'MARA', 'MARC', 'MARCIA', 'MARCO', 'MARCUS', 'MARGARET', 'MARGIE', 'MARIA', 'MARIAN',
+    'MARIE', 'MARILYN', 'MARINA', 'MARIO', 'MARION', 'MARISA', 'MARJORIE', 'MARK', 'MARLENE', 'MARSHALL', 'MARTA', 'MARTHA',
+    'MARTIN', 'MARTY', 'MARVIN', 'MARY', 'MASON', 'MATEO', 'MATILDA', 'MATTHEW', 'MAUREEN', 'MAURICE', 'MAVIS', 'MAX',
+    'MAXINE', 'MAYA', 'MEGAN', 'MELANIE', 'MELINDA', 'MELISSA', 'MELODY', 'MELVIN', 'MERCEDES', 'MEREDITH', 'MICAH', 'MICHAEL',
+    'MICHELLE', 'MIGUEL', 'MIKE', 'MILDRED', 'MILES', 'MILO', 'MILTON', 'MIRANDA', 'MIRIAM', 'MITCHELL', 'MOLLY', 'MONA',
+    'MONICA', 'MORGAN', 'MORRIS', 'MOSES', 'MURIEL', 'MURRAY', 'MYRA', 'MYRON', 'MYRTLE', 'NADIA', 'NANCY', 'NAOMI',
+    'NATALIE', 'NATE', 'NATHAN', 'NATHANIEL', 'NEAL', 'NED', 'NEIL', 'NELLIE', 'NELSON', 'NESTOR', 'NETTIE', 'NEVE',
+    'NIALL', 'NICHOLAS', 'NICK', 'NICOLAS', 'NICOLE', 'NIGEL', 'NINA', 'NOAH', 'NOEL', 'NOELLE', 'NOLAN', 'NORA',
+    'NORMA', 'NORMAN', 'OCTAVIA', 'ODELL', 'OLAF', 'OLGA', 'OLIVER', 'OLIVIA', 'OLLIE', 'OMAR', 'OPAL', 'ORLANDO',
+    'ORSON', 'OSCAR', 'OSWALD', 'OTIS', 'OTTO', 'OWEN', 'PABLO', 'PAIGE', 'PAMELA', 'PARKER', 'PATRICIA', 'PATRICK',
+    'PATSY', 'PAUL', 'PAULA', 'PAULINE', 'PEARL', 'PEDRO', 'PEGGY', 'PENELOPE', 'PERCY', 'PERRY', 'PETE', 'PETER',
+    'PHILIP', 'PHOEBE', 'PHYLLIS', 'PIERCE', 'PIPER', 'POLLY', 'PRESTON', 'PRISCILLA', 'QUENTIN', 'QUINCY', 'QUINN', 'RACHEL',
+    'RAFAEL', 'RALPH', 'RAMON', 'RANDALL', 'RANDY', 'RAOUL', 'RAPHAEL', 'RAQUEL', 'RAY', 'RAYMOND', 'REBECCA', 'REGINA',
+    'REGINALD', 'REID', 'RENE', 'REUBEN', 'REX', 'RHODA', 'RHONDA', 'RICARDO', 'RICHARD', 'RICK', 'RICKY', 'RILEY',
+    'RITA', 'ROBERT', 'ROBERTA', 'ROBIN', 'ROBYN', 'ROCCO', 'RODERICK', 'RODNEY', 'RODOLFO', 'ROGER', 'ROLAND', 'ROMAN',
+    'RONALD', 'RONNIE', 'RORY', 'ROSA', 'ROSALIE', 'ROSARIO', 'ROSCOE', 'ROSE', 'ROSEMARY', 'ROSIE', 'ROSS', 'ROWAN',
+    'ROXANNE', 'ROY', 'RUBEN', 'RUBY', 'RUDOLPH', 'RUDY', 'RUFUS', 'RUSSELL', 'RUTH', 'RYAN', 'SABRINA', 'SADIE',
+    'SALLY', 'SALVADOR', 'SAM', 'SAMANTHA', 'SAMSON', 'SAMUEL', 'SANDRA', 'SANTIAGO', 'SARA', 'SARAH', 'SAUL', 'SAWYER',
+    'SCARLETT', 'SCOTT', 'SEAN', 'SEBASTIAN', 'SELENA', 'SERENA', 'SERGIO', 'SETH', 'SHANE', 'SHANNON', 'SHARON', 'SHAWN',
+    'SHEILA', 'SHELBY', 'SHELDON', 'SHERMAN', 'SHIRLEY', 'SIDNEY', 'SIENNA', 'SIERRA', 'SILAS', 'SIMON', 'SOFIA', 'SOLOMON',
+    'SONIA', 'SOPHIA', 'SOPHIE', 'SPENCER', 'STACEY', 'STANLEY', 'STELLA', 'STEPHANIE', 'STEPHEN', 'STERLING', 'STEVE', 'STEVEN',
+    'STEWART', 'STUART', 'SULLIVAN', 'SUSAN', 'SUSANNA', 'SUSIE', 'SYLVIA', 'TABITHA', 'TAMARA', 'TAMMY', 'TANYA', 'TARA',
+    'TATE', 'TAYLOR', 'TED', 'TERENCE', 'TERESA', 'TERRY', 'TESSA', 'THADDEUS', 'THELMA', 'THEO', 'THEODORE', 'THERESA',
+    'THOMAS', 'TIFFANY', 'TIM', 'TIMOTHY', 'TINA', 'TOBIAS', 'TOBY', 'TODD', 'TOM', 'TOMMY', 'TONI', 'TONY',
+    'TRACY', 'TRAVIS', 'TREVOR', 'TRINITY', 'TRISTAN', 'TROY', 'TYLER', 'TYRA', 'TYRONE', 'TYSON', 'URSULA', 'VALERIE',
+    'VANESSA', 'VAUGHN', 'VERA', 'VERNON', 'VERONICA', 'VICKIE', 'VICTOR', 'VICTORIA', 'VINCENT', 'VIOLA', 'VIOLET', 'VIRGIL',
+    'VIRGINIA', 'VIVIAN', 'WADE', 'WALLACE', 'WALTER', 'WANDA', 'WARREN', 'WAYNE', 'WENDELL', 'WENDY', 'WESLEY', 'WHITNEY',
+    'WILBUR', 'WILEY', 'WILFRED', 'WILLARD', 'WILLIAM', 'WILLIE', 'WILLIS', 'WILMA', 'WILSON', 'WINIFRED', 'WINSTON', 'WYATT',
+    'XAVIER', 'YOLANDA', 'YVETTE', 'YVONNE', 'ZACHARY', 'ZANE', 'ZARA', 'ZELDA', 'ZOE', 'ZOEY'
+];
+const GUESS_DICT = (() => {
+    const s = new Set();
+    for (const e of DAILY_NAMES) s.add(e.name);
+    for (const n of GUESS_EXTRA) {
+        const c = n.toUpperCase().replace(/[^A-Z]/g, '');
+        if (c.length >= 3) s.add(c);
+    }
+    return s;
+})();
 
 // ====== LIBRARY ======
 const library = {
@@ -797,8 +884,12 @@ function submitDailyGuess(rawName) {
     if (name.length < MIN_NAME_LEN) return null;
     const state = ensureTodaysSession();
     if (state.over) return null;
-    if (state.attempts.includes(name)) return { duplicate: true };
     const answer = todaysAnswer();
+    // Guess must match the hidden name's length (Wordle rule) — kills 20-letter probing.
+    if (name.length !== answer.length) return { invalid: 'length', need: answer.length };
+    // Guess must be a real name from the dictionary — kills alphabet brute-force.
+    if (!GUESS_DICT.has(name)) return { invalid: 'notname' };
+    if (state.attempts.includes(name)) return { duplicate: true };
     const closeness = computeCloseness(name, answer);
     state.attempts.push(name);
     const prevStreak = readDmnStreak();
@@ -826,6 +917,17 @@ function submitDailyGuess(rawName) {
     return { closeness, state, answer, prevStreak, newStreak, winEffect };
 }
 
+// Brief transient hint shown under the daily status (invalid guesses).
+let dailyHintTimer = null;
+function dailyHint(msg) {
+    const el = document.getElementById('dailyHint');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(dailyHintTimer);
+    dailyHintTimer = setTimeout(() => { el.style.opacity = '0'; }, 1800);
+}
+
 function renderDailyUI() {
     const state = ensureTodaysSession();
     const streak = readDmnStreak();
@@ -836,6 +938,8 @@ function renderDailyUI() {
     if (state.over) { dailyBannerStatus.textContent = state.won ? `✓ WON IN ${state.attempts.length}` : 'FAILED'; }
     else { dailyBannerStatus.textContent = state.attempts.length === 0 ? 'NOT STARTED' : `${state.attempts.length}/6 USED`; }
     dailyBannerStreak.textContent = `🔥 ${streak}`;
+    // Lock the input to the hidden name's exact length (Wordle rule).
+    if (dailyNameInput) dailyNameInput.maxLength = answer.length;
     // Length is public from the start — no length signal needed per guess.
     if (!state.over) {
         const left = CFG.DMN_MAX_ATTEMPTS - state.attempts.length;
@@ -1181,7 +1285,15 @@ triggerBtn.addEventListener('click', () => {
         if (name.length < MIN_NAME_LEN) return;
         const result = submitDailyGuess(name);
         if (!result) return;
-        if (result.duplicate) { triggerHaptic([30,30]); dailyNameInput.classList.add('shake'); setTimeout(() => dailyNameInput.classList.remove('shake'), 300); return; }
+        if (result.duplicate || result.invalid) {
+            triggerHaptic([30,30]);
+            dailyNameInput.classList.add('shake');
+            setTimeout(() => dailyNameInput.classList.remove('shake'), 300);
+            if (result.invalid === 'length') dailyHint(`NEED ${result.need} LETTERS`);
+            else if (result.invalid === 'notname') dailyHint('NOT A KNOWN NAME');
+            else dailyHint('ALREADY TRIED');
+            return;
+        }
         // On a win, force the celebration effect tier (attempt 1 = satoshi, etc.). Otherwise plain.
         const presetResult = Object.assign({}, result.closeness.gResult, { _forceEffect: result.winEffect || 'plain' });
         startScan(presetResult, null, () => {
