@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Soul Arcade II v9.18.4
+  Soul Arcade II v9.18.5
   Arcade name vibe reader · 101 verdicts · pure math, no mysticism
   Features: random visual effects (satoshi/rainbow/glitch/glow) · VS rock-paper-scissors ·
             Daily Mystery Name (length shown, per-letter clues, 6-tier win) · Daily stats · Stickers
@@ -493,11 +493,11 @@ body.is-result .result-actions { display: flex; }
             <p class="rules-mode">⚔️ VS</p>
             <p>Enter two names. They battle with rock-paper-scissors — <b>rock</b> beats scissors, <b>scissors</b> beat paper, <b>paper</b> beats rock. Same gesture = a tie.</p>
             <p class="rules-mode">🔤 GUESS</p>
-            <p>Guess today's hidden name in <b>6 tries</b>. The letter count is shown up front, and each guess must be a <b>real name of that exact length</b> (random letters won't be accepted — only genuine names count, like word games). After each guess every letter is colored:</p>
+            <p>Guess today's hidden name in <b>6 tries</b>. The letter count is shown up front, so every guess must have that exact length. After each guess every letter is colored:</p>
             <div class="rules-row"><span class="daily-letter is-green">A</span><span>Right letter, right spot</span></div>
             <div class="rules-row"><span class="daily-letter is-yellow">B</span><span>In the name, wrong spot</span></div>
             <div class="rules-row"><span class="daily-letter is-black">C</span><span>Not in the name</span></div>
-            <p>An invalid guess (wrong length or not a known name) doesn't use up a try. Solve it in 1 or 2 tries for a <b>golden</b> celebration. A new name drops daily — keep your streak alive. 🔥</p>
+            <p>A guess of the wrong length doesn't use up a try. Solve it in 1 or 2 tries for a <b>golden</b> celebration. A new name drops daily — keep your streak alive. 🔥</p>
         </div>
     </div>
 </div>
@@ -887,8 +887,6 @@ function submitDailyGuess(rawName) {
     const answer = todaysAnswer();
     // Guess must match the hidden name's length (Wordle rule) — kills 20-letter probing.
     if (name.length !== answer.length) return { invalid: 'length', need: answer.length };
-    // Guess must be a real name from the dictionary — kills alphabet brute-force.
-    if (!GUESS_DICT.has(name)) return { invalid: 'notname' };
     if (state.attempts.includes(name)) return { duplicate: true };
     const closeness = computeCloseness(name, answer);
     state.attempts.push(name);

@@ -1,7 +1,7 @@
 // Soul Arcade II — service worker.
 // Network-first: always fetches the freshest version when online, falls back to
 // cache only when offline. This avoids stale-version problems during frequent updates.
-const CACHE = 'soul-arcade-2-v9_18_4';
+const CACHE = 'soul-arcade-2-v9_18_5';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
